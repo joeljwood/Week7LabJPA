@@ -60,36 +60,13 @@ public class UserDB {
         }
     }
 
-    public List<User> getAll() throws DBUtil {
-        ConnectionPool pool = ConnectionPool.getInstance();
-        Connection connection = pool.getConnection();
-
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-
-        try {
-            ps = connection.prepareStatement("SELECT * FROM users;");
-            rs = ps.executeQuery();
-            List<User> users = new ArrayList<>();
-            while (rs.next()) {
-                users.add(new User(rs.getString("username"),
-                        rs.getString("password"),
-                        rs.getString("firstname"),
-                        rs.getString("lastname"),
-                        rs.getString("email")));
-            }
-            pool.freeConnection(connection);
+    public List<User> getAll() throws Exception {
+         EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try{
+            List<User> users = em.createNamedQuery("Users.findAll", User.class);
             return users;
-        } catch (SQLException ex) {
-            Logger.getLogger(UserDB.class.getName()).log(Level.SEVERE, "Cannot read users", ex);
-            throw new DBUtil("Error getting Users");
         } finally {
-            try {
-                rs.close();
-                ps.close();
-            } catch (SQLException ex) {
-            }
-            pool.freeConnection(connection);
+            em.close();
         }
     }
 
