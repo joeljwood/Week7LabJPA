@@ -1,6 +1,6 @@
 package database;
 
-import models.User;
+import models.Users;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,7 +14,7 @@ import javax.persistence.EntityTransaction;
 
 public class UserDB {
 
-    public int insert(User user) throws Exception {
+    public void insert(Users user) throws Exception {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         EntityTransaction trans = em.getTransaction();
         try{
@@ -25,47 +25,38 @@ public class UserDB {
             trans.rollback();
         }finally{
             em.close();
-        }
-        
-        
+        }    
     }
 
-    public int update(User user) throws Exception {
+    public void update(Users user) throws Exception {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         EntityTransaction trans = em.getTransaction();
         try{
             trans.begin();
             em.merge(user);
-            
+            trans.commit();
         }catch(Exception e){
-            
+            trans.rollback();
         }finally{
             em.close();
         }
     }
 
-    public List<User> getAll() throws Exception {
+    public List<Users> getAll() throws Exception {
          EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try{
-            List<User> users = em.createNamedQuery("Users.findAll", User.class);
+            List<Users> users = em.createNamedQuery("Users.findAll", Users.class).getResultList();
             return users;
         } finally {
             em.close();
         }
     }
 
-    /**
-     * Get a single user by their username.
-     *
-     * @param username The unique username.
-     * @return A User object if found, null otherwise.
-     * @throws DBUtil
-     */
-    public User getUser(String username) throws Exception {
+    public Users getUser(String username) throws Exception {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
 
         try {
-            User user = em.find(User.class, username);
+            Users user = em.find(Users.class, username);
             return user;
             
         } finally {
@@ -73,22 +64,17 @@ public class UserDB {
         }
     }
 
-    public int delete(User user) throws DBUtil {
-        ConnectionPool pool = ConnectionPool.getInstance();
-        Connection connection = pool.getConnection();
-        String preparedQuery = "DELETE FROM users WHERE username = ?";
-        PreparedStatement ps;
-
-        try {
-            ps = connection.prepareStatement(preparedQuery);
-            ps.setString(1, user.getUsername());
-            int rows = ps.executeUpdate();
-            return rows;
-        } catch (SQLException ex) {
-            Logger.getLogger(UserDB.class.getName()).log(Level.SEVERE, "Cannot delete " + user.toString(), ex);
-            throw new DBUtil("Error deleting User");
-        } finally {
-            pool.freeConnection(connection);
-        }
+    public void delete(Users user) throws Exception {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        EntityTransaction trans = em.getTransaction();
+        try{
+            trans.begin();
+            em.remove(em.merge(user));
+            trans.commit();
+        }catch(Exception e){
+            trans.rollback();
+        }finally{
+            em.close();
+        } 
     }
 }
