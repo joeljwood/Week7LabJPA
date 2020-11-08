@@ -10,53 +10,37 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 
 public class UserDB {
 
-    public int insert(User user) throws DBUtil {
-        ConnectionPool pool = ConnectionPool.getInstance();
-        Connection connection = pool.getConnection();
-
-        try {
-            String preparedQuery = "INSERT INTO users (username, password, firstname, lastname, email) VALUES (?, ?, ?, ?, ?)";
-            PreparedStatement ps = connection.prepareStatement(preparedQuery);
-            ps.setString(1, user.getUsername());
-            ps.setString(2, user.getPassword());
-            ps.setString(3, user.getFirstname());
-            ps.setString(4, user.getLastname());
-            ps.setString(5, user.getEmail());
-            int rows = ps.executeUpdate();
-            return rows;
-        } catch (SQLException ex) {
-            Logger.getLogger(UserDB.class.getName()).log(Level.SEVERE, "Cannot insert " + user.toString(), ex);
-            throw new DBUtil("Error inserting user");
-        } finally {
-            pool.freeConnection(connection);
+    public int insert(User user) throws Exception {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        EntityTransaction trans = em.getTransaction();
+        try{
+            trans.begin();
+            em.persist(user);
+            trans.commit();
+        }catch(Exception e){
+            trans.rollback();
+        }finally{
+            em.close();
         }
+        
+        
     }
 
-    public int update(User user) throws DBUtil {
-        ConnectionPool pool = ConnectionPool.getInstance();
-        Connection connection = pool.getConnection();
-
-        try {
-            String preparedSQL = "UPDATE users SET password = ?, firstname = ?, lastname = ?, email = ? WHERE username = ?";
-
-            PreparedStatement ps = connection.prepareStatement(preparedSQL);
-
-            ps.setString(1, user.getPassword());
-            ps.setString(2, user.getFirstname());
-            ps.setString(3, user.getLastname());
-            ps.setString(4, user.getEmail());
-            ps.setString(5, user.getUsername());
-
-            int rows = ps.executeUpdate();
-            return rows;
-        } catch (SQLException ex) {
-            Logger.getLogger(UserDB.class.getName()).log(Level.SEVERE, "Cannot update " + user.toString(), ex);
-            throw new DBUtil("Error updating user");
-        } finally {
-            pool.freeConnection(connection);
+    public int update(User user) throws Exception {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        EntityTransaction trans = em.getTransaction();
+        try{
+            trans.begin();
+            em.merge(user);
+            
+        }catch(Exception e){
+            
+        }finally{
+            em.close();
         }
     }
 
