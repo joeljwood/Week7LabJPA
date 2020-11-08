@@ -1,7 +1,7 @@
 package services;
 
 import database.UserDB;
-import models.User;
+import models.Users;
 import java.util.List;
 
 public class UserService {
@@ -12,34 +12,34 @@ public class UserService {
         userDB = new UserDB();
     }
 
-    public User get(String username) throws Exception {
+    public Users get(String username) throws Exception {
         return userDB.getUser(username);
     }
 
-    public List<User> getAll() throws Exception {
+    public List<Users> getAll() throws Exception {
         return userDB.getAll();
     }
 
-    public int update(String username, String password, String firstname, String lastname, String email) throws Exception {
-        User user = get(username);
+    public void update(String username, String password, String firstname, String lastname, String email) throws Exception {
+        Users user = get(username);
         user.setPassword(password);
         user.setFirstname(firstname);
         user.setLastname(lastname);
         user.setEmail(email);
-        return userDB.update(user);
+        userDB.update(user);
     }
 
-    public int delete(String username) throws Exception {
-        User deletedUser = userDB.getUser(username);
+    public void delete(String username) throws Exception {
+        Users deletedUser = userDB.getUser(username);
         // do not allow the admin to be deleted
         if (deletedUser.getUsername().equals("admin")) {
-            return 0;
+            return;
         }
-        return userDB.delete(deletedUser);
+        userDB.delete(deletedUser);
     }
 
-    public int insert(String username, String password, String firstname, String lastname, String email) throws Exception {
-        User user = new User(username, password, firstname, lastname, email);
-        return userDB.insert(user);
+    public void insert(String username, String password, String firstname, String lastname, String email) throws Exception {
+        Users user = new Users(username, password, firstname, lastname, email);
+        userDB.insert(user);
     }
 }
