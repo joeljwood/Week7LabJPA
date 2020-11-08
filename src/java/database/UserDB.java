@@ -9,10 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.persistence.EntityManager;
 
 public class UserDB {
 
-    public int insert(User user) throws NotesDBException {
+    public int insert(User user) throws DBUtil {
         ConnectionPool pool = ConnectionPool.getInstance();
         Connection connection = pool.getConnection();
 
@@ -28,13 +29,13 @@ public class UserDB {
             return rows;
         } catch (SQLException ex) {
             Logger.getLogger(UserDB.class.getName()).log(Level.SEVERE, "Cannot insert " + user.toString(), ex);
-            throw new NotesDBException("Error inserting user");
+            throw new DBUtil("Error inserting user");
         } finally {
             pool.freeConnection(connection);
         }
     }
 
-    public int update(User user) throws NotesDBException {
+    public int update(User user) throws DBUtil {
         ConnectionPool pool = ConnectionPool.getInstance();
         Connection connection = pool.getConnection();
 
@@ -53,13 +54,13 @@ public class UserDB {
             return rows;
         } catch (SQLException ex) {
             Logger.getLogger(UserDB.class.getName()).log(Level.SEVERE, "Cannot update " + user.toString(), ex);
-            throw new NotesDBException("Error updating user");
+            throw new DBUtil("Error updating user");
         } finally {
             pool.freeConnection(connection);
         }
     }
 
-    public List<User> getAll() throws NotesDBException {
+    public List<User> getAll() throws DBUtil {
         ConnectionPool pool = ConnectionPool.getInstance();
         Connection connection = pool.getConnection();
 
@@ -81,7 +82,7 @@ public class UserDB {
             return users;
         } catch (SQLException ex) {
             Logger.getLogger(UserDB.class.getName()).log(Level.SEVERE, "Cannot read users", ex);
-            throw new NotesDBException("Error getting Users");
+            throw new DBUtil("Error getting Users");
         } finally {
             try {
                 rs.close();
@@ -97,44 +98,21 @@ public class UserDB {
      *
      * @param username The unique username.
      * @return A User object if found, null otherwise.
-     * @throws NotesDBException
+     * @throws DBUtil
      */
-    public User getUser(String username) throws NotesDBException {
-        ConnectionPool pool = ConnectionPool.getInstance();
-        Connection connection = pool.getConnection();
-        String selectSQL = "SELECT * FROM users WHERE username = ?";
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+    public User getUser(String username) throws Exception {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
 
         try {
-            ps = connection.prepareStatement(selectSQL);
-            ps.setString(1, username);
-            rs = ps.executeQuery();
-
-            User user = null;
-            while (rs.next()) {
-                user = new User(rs.getString("username"),
-                        rs.getString("password"),
-                        rs.getString("firstname"),
-                        rs.getString("lastname"),
-                        rs.getString("email"));
-            }
-            pool.freeConnection(connection);
+            User user = em.find(User.class, username);
             return user;
-        } catch (SQLException ex) {
-            Logger.getLogger(UserDB.class.getName()).log(Level.SEVERE, "Cannot read users", ex);
-            throw new NotesDBException("Error getting Users");
+            
         } finally {
-            try {
-                rs.close();
-                ps.close();
-            } catch (SQLException ex) {
-            }
-            pool.freeConnection(connection);
+            em.close();
         }
     }
 
-    public int delete(User user) throws NotesDBException {
+    public int delete(User user) throws DBUtil {
         ConnectionPool pool = ConnectionPool.getInstance();
         Connection connection = pool.getConnection();
         String preparedQuery = "DELETE FROM users WHERE username = ?";
@@ -147,7 +125,7 @@ public class UserDB {
             return rows;
         } catch (SQLException ex) {
             Logger.getLogger(UserDB.class.getName()).log(Level.SEVERE, "Cannot delete " + user.toString(), ex);
-            throw new NotesDBException("Error deleting User");
+            throw new DBUtil("Error deleting User");
         } finally {
             pool.freeConnection(connection);
         }
